@@ -6,6 +6,7 @@
 .global multiplymatrix
 .global printmatrix
 .global matrixstart
+.extern free
 .data
 matrixstart:
     .quad 0
@@ -22,7 +23,7 @@ makematrix://makes a matrix with %rdi columns and %rsi rows, and returns its ref
     push %rdi//number of columns
     push %rsi
     movq $32, %rdi
-    call malloc
+    call malloc@PLT
     pop %rsi
     pop %rdi
     mov %rax, matrixstart(%rip)
@@ -30,7 +31,7 @@ makematrix://makes a matrix with %rdi columns and %rsi rows, and returns its ref
     push %rdi
     push %rsi
     shl $5, %rdi//length of array in bytes
-    call malloc
+    call malloc@PLT
     pop %rsi
     pop %rdi
 
@@ -53,7 +54,7 @@ resizematrix://adds %rsi columns to matrix %rdi, no return val
     movq (%rbx), %rdi
     movq 8(%rbx), %rsi
     shlq $5, %rsi
-    call realloc
+    call realloc@PLT
     movq matrixstart(%rip), %rbx
     movq %rax, (%rbx)
     ret
@@ -71,7 +72,7 @@ copymatrix://makes a deepcopy of matrix %rdi, returns the pointer to that new ma
     movq 8(%rbx), %rdx
     shl $5, %rdx
     push %rdi
-    call memcpy
+    call memcpy@PLT
     pop %rdi
     pop %rax
     mov 24(%rdi), %rdx
@@ -81,9 +82,9 @@ copymatrix://makes a deepcopy of matrix %rdi, returns the pointer to that new ma
 freematrix://frees the memory of matrix %rdi, no return value
     mov %rdi, matrixstart(%rip)
     movq (%rdi), %rdi
-    call free
+    call free@PLT
     movq matrixstart(%rip), %rdi
-    call free
+    call free@PLT
     ret
 
 printmatrix://prints matrix %rdi, no return value
@@ -107,14 +108,14 @@ printmatrix://prints matrix %rdi, no return value
     lea format(%rip), %rdi
     movsd (%rdx), %xmm0
     mov $1, %rax
-    call printf
+    call printf@PLT
     inc %r14
     mov matrixstart(%rip), %rcx
     cmp 8(%rcx),%r14
     jl piloop
     inc %r13
     lea newl(%rip), %rdi
-    call printf
+    call printf@PLT
     jmp poloop
     peloop:
     pop %r13
@@ -175,7 +176,7 @@ multiplymatrix: //multiplies matrix1 rdi, matrix2 rsi, stores resulting matrix i
     imul 16(%rsi), %rax
     shl $3, %rax
     mov %rax, %rdi
-    call malloc
+    call malloc@PLT
     mov %rax, %r8
     pop %rsi
     pop %rdi//okay this makes a new array
@@ -231,7 +232,7 @@ multiplymatrix: //multiplies matrix1 rdi, matrix2 rsi, stores resulting matrix i
     push %rsi
     push %r8
     mov (%rsi), %rdi
-    call free
+    call free@PLT
     pop %r8
     pop %rsi
     pop %rdi
