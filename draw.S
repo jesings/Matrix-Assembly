@@ -18,17 +18,10 @@ main:
     call copymatrix
     mov %rax, %r12
 
-    mov %r15, %rdi
-    call printmatrix
-
     mov %r15,%rdi
     mov $2,%rsi
     call resizematrix
     
-    mov %r12, %rdi
-    mov %r15, %rsi
-    call multiplymatrix
-
     mov %r15, %rdi
     mov $0, %r14
     edgeloop:
@@ -47,6 +40,13 @@ main:
     add $10, %r14
     cmp $512,%r14
     jl edgeloop
+
+    mov %r12, %rdi
+    mov %r15, %rsi
+    call multiplymatrix
+
+    mov %r15, %rdi
+    call printmatrix
 
     mov $1, %rdi
     mov $4, %rsi
@@ -71,6 +71,13 @@ main:
     add $10, %r14
     cmp $512,%r14
     jl edgeloop1
+    //counterpart to 250 is 511, why?
+    mov %r13, %rdi
+    call printmatrix
+
+    mov $0xff5511, %rsi
+    mov %r15, %rdi
+    call drawedges
 
     mov %r13, %rdi
     mov $0x1155ff, %rsi
@@ -78,13 +85,6 @@ main:
 
     mov %r13, %rdi
     call freematrix
-
-    mov %r15, %rdi
-    call printmatrix
-
-    mov $0xff5511, %rsi
-    mov %r15, %rdi
-    call drawedges
 
     call pr
 

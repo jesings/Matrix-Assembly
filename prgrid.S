@@ -62,7 +62,7 @@ imgx:
     cmp $512, %r12
     jl  imgx
 
-    mov newl(%rip), %rsi
+    lea newl(%rip), %rsi
     mov $1, %rdx
     mov $1, %rax
     syscall
