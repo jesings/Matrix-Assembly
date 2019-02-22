@@ -21,7 +21,8 @@ next_digit:
     add $0x30, %al       # convert to ASCII
     movb %al,(%rsi)       # write it to the buffer
     inc %rsi
-    loop next_digit
+    dec %rcx
+    jg next_digit
     mov $0x20,%al
     movb %al,(%rsi)       # write it to the buffer
     lea strResult(%rip), %rax
