@@ -3,7 +3,7 @@
 .global drawedges
 .text
 addpoint:
-    // %rdi is matrix, x0:%xmm0, y0:%xmm1, z0:%xmm2
+    // %rdi is matrix, x0:%xmm0, y0:%xmm1, z0:%xmm2, this function adds a point x,y,z,1 to a matrix
     mov 24(%rdi),%rdx
     cmp %rdx, 8(%rdi)
     jg nomemexpand
@@ -32,7 +32,7 @@ addpoint:
     incq 24(%rdi)
     ret
 addedge:
-    //matrix is in %rdi, x0:%xmm0,y0:%xmm1,z0:%xmm2,x1:%xmm3,y1:%xmm4,z1:%xmm5
+    //matrix is in %rdi, x0:%xmm0,y0:%xmm1,z0:%xmm2,x1:%xmm3,y1:%xmm4,z1:%xmm5, this function adds an edge [x,y,z,1],[x,y,z,1] to a matrix
     call addpoint
     movsd %xmm3, %xmm0
     movsd %xmm4, %xmm1
@@ -41,29 +41,30 @@ addedge:
     ret
 
 drawedges:
-    //matrix is in %rdi, color is in %rsi
+    //matrix is in %rdi, color is in %rsi, this function calls the bresenham routine to draw a line for each edge in the edge matrix
     push %r15
     push %r14
-    mov $0, %r15
+    xor %r15, %r15
     mov %rsi, %r14
+    xor %rax, %rax
     drawloop:
-    //finding memory location
+    //find memory location, populate proper arguments
     mov %rdi,matrixstart(%rip)
-    mov %r15, %rax
-    shl $5, %rax
-    mov (%rdi),%rdx
-    add %rdx, %rax
+    mov (%rdi),%r8
     mov %r14, %rdi
-    movsd (%rax), %xmm0
+    movsd (%r8,%rax), %xmm0
     cvtsd2si %xmm0, %rsi
-    movsd 8(%rax), %xmm0
+    movsd 8(%r8,%rax), %xmm0
     cvtsd2si %xmm0, %rdx
-    movsd 32(%rax), %xmm0
+    movsd 32(%r8,%rax), %xmm0
     cvtsd2si %xmm0, %rcx
-    movsd 40(%rax), %xmm0
+    movsd 40(%r8,%rax), %xmm0
     cvtsd2si %xmm0, %r8
+    push %rax
     call bresenham
+    pop %rax
     //loop stuff
+    add $64, %rax
     add $2, %r15
     mov matrixstart(%rip), %rdi
     cmp 24(%rdi),%r15

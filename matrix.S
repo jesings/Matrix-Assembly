@@ -33,7 +33,7 @@ makematrix://makes a matrix with %rdi columns and %rsi rows, and returns its ref
     pop %rsi
     pop %rdi
     mov %rax, matrixstart(%rip)
-    //matrix address
+    //allocate space for the matrix
     push %rdi
     push %rsi
     imul %rsi, %rdi
@@ -41,12 +41,13 @@ makematrix://makes a matrix with %rdi columns and %rsi rows, and returns its ref
     call malloc@PLT
     pop %rsi
     pop %rdi
-
+    //populates fields of the matrix pseudo-struct properly
     movq matrixstart(%rip), %rcx
     movq %rax, (%rcx)
     movq %rdi, 8(%rcx)
     movq %rsi, 16(%rcx)
     movq $0, 24(%rcx)
+    //sets return value
     movq matrixstart(%rip), %rax
     ret
 
@@ -71,6 +72,7 @@ copymatrix://makes a deepcopy of matrix %rdi, returns the pointer to that new ma
     call makematrix
     pop %rbx
     push %rax
+    //new matrix made, copy fields of pseudo-struct, find array addresses, and memcpy
     movq (%rax), %rdi
     movq (%rbx), %rsi
     movq 8(%rbx), %rdx
@@ -87,9 +89,9 @@ copymatrix://makes a deepcopy of matrix %rdi, returns the pointer to that new ma
 freematrix://frees the memory of matrix %rdi, no return value
     mov %rdi, matrixstart(%rip)
     movq (%rdi), %rdi
-    call free@PLT
+    call free@PLT//array freed
     movq matrixstart(%rip), %rdi
-    call free@PLT
+    call free@PLT//pseudo-struct freed
     ret
 
 printmatrix://prints matrix %rdi, no return value
@@ -97,7 +99,7 @@ printmatrix://prints matrix %rdi, no return value
     push %r14
     push %r13
     push %rbx
-    sub $8, %rsp
+    sub $8, %rsp //align to the 16 byte boundary, there's a better way to do this
     mov $0, %r13
     poloop:
     mov matrixstart(%rip), %rcx
@@ -111,12 +113,13 @@ printmatrix://prints matrix %rdi, no return value
     add %rax, %rbx
     mov matrixstart(%rip), %rcx
     movq (%rcx), %rdx
-    movsd (%rdx,%rbx,8), %xmm0
+    movsd (%rdx,%rbx,8), %xmm0 //found double to print, set arguments to print it
     lea format(%rip), %rdi
     mov $1, %rax
     call printf@PLT
     inc %r14
     mov matrixstart(%rip), %rcx
+    //loop stuff
     cmp 24(%rcx),%r14
     jl piloop
     inc %r13
@@ -146,6 +149,7 @@ identitymatrix://turns square matrix %rdi into an identity matrix, no return val
     iiloop:
     mov matrixstart(%rip), %rcx
     cmp %r13, %r14
+    //make the 0 or 1 proper for the identity
     jne mzero
     movsd one(%rip), %xmm0
     jmp moned
@@ -159,6 +163,7 @@ identitymatrix://turns square matrix %rdi into an identity matrix, no return val
     movq (%rcx), %rdx
     movsd %xmm0, (%rdx, %rbx, 8)
     inc %r14
+    //put the 0 or 1 in the right memory location
     cmp 8(%rcx),%r14
     jl iiloop
     inc %r13
@@ -175,16 +180,16 @@ multiplymatrix: //multiplies matrix1 rdi, matrix2 rsi, stores resulting matrix i
     pushq %rbp
     movq %rsp, %rbp
 
-    push %rdi
-    push %rsi
+    pushq %rdi
+    pushq %rsi
     mov 8(%rsi), %rax
     imul 16(%rsi), %rax
     shl $3, %rax
     mov %rax, %rdi
     call malloc@PLT
     mov %rax, %r8
-    pop %rsi
-    pop %rdi//okay this makes a new array
+    popq %rsi
+    popq %rdi//okay this makes a new array
 
     mov $0, %r13 //we take the rows of the first matrix, and the columns of the second
     loop_layer_0:
@@ -218,7 +223,7 @@ multiplymatrix: //multiplies matrix1 rdi, matrix2 rsi, stores resulting matrix i
     shl $3, %rcx
     add %r8, %rcx
     movsd %xmm0,(%rcx)
-    //okay
+    //loop stuff
     inc %r14
     cmp 24(%rsi),%r14
     jl loop_layer_1

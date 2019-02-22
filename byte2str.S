@@ -1,4 +1,4 @@
-.global convert #convert takes in a byte value in rax and returns its string representation in rsi
+.global convert #convert takes in a byte value in rax and returns its string representation in rsi, and returns the length in rbx (NOTE: NOT C COMPLIANT, RBX IS SUPPOSED TO BE A CALLER SAVED REGISTER BUT IS NEEDED FOR OUTPUT, but I'm too lazy to change anything right now so this should only be used as a planned subroutine and even then probably not much.)
 .data
 strResult:
     .zero 4# string buffer to store results
