@@ -2,6 +2,7 @@
 .global data
 .data
     x: .quad 0
+    half: .double .5
 .bss
     data: .zero 786432#512*512*3
 .text
@@ -13,6 +14,16 @@ main:
 
     mov %r15, %rdi
     call identitymatrix
+
+    mov %r15, %rdi
+    call printmatrix
+
+    mov %r15, %rdi
+    movsd half(%rip), %xmm0
+    call scalarmult
+
+    mov %r15, %rdi
+    call printmatrix
 
     mov %r15, %rdi
     call copymatrix

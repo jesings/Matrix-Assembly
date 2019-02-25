@@ -6,6 +6,7 @@
 .global multiplymatrix
 .global printmatrix
 .global matrixstart
+.global scalarmult
 .global one
 .extern free
 .data
@@ -20,6 +21,8 @@ indices:
 zero:
     .double 0.0
 one:
+    .double 1.0
+scalar:
     .double 1.0
 //param order rdi, rsi, rdx, rcx, r8, r9
 //return value in rax
@@ -245,4 +248,21 @@ multiplymatrix: //multiplies matrix1 rdi, matrix2 rsi, stores resulting matrix i
     popq %rbp
     popq %r14
     popq %r13
+    vzeroupper
+    ret
+scalarmult:
+    movsd %xmm0, scalar(%rip)
+    mov $0, %rcx
+    smloop:
+    mov %rcx, %rax
+    shl $5, %rax
+    mov (%rdi), %rsi
+    vmovupd (%rsi,%rax), %ymm0
+    vbroadcastsd scalar(%rip), %ymm1
+    vmulpd %ymm0, %ymm1, %ymm0
+    vmovupd %ymm0, (%rsi,%rax)
+    inc %rcx
+    cmp 24(%rdi), %rcx
+    jl smloop
+    vzeroupper
     ret
